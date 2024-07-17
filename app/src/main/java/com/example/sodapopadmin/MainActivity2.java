@@ -1,21 +1,34 @@
 package com.example.sodapopadmin;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firestore.admin.v1.Index;
+import com.google.firestore.v1.StructuredQuery;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity2 extends AppCompatActivity {
-
     private FirebaseFirestore db;
-    private TextView ordersTextView;
+    private RecyclerView ordersRecyclerView;
+    private OrderAdapter orderAdapter;
+    private Button view_reports_button;
+    private List<StructuredQuery.Order> orderList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,35 +36,48 @@ public class MainActivity2 extends AppCompatActivity {
         setContentView(R.layout.activity_main2);
 
         db = FirebaseFirestore.getInstance();
-        ordersTextView = findViewById(R.id.orders_text_view);
+        ordersRecyclerView = findViewById(R.id.orders_recycler_view);
+        ordersRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        orderAdapter = new OrderAdapter(orderList);
+        ordersRecyclerView.setAdapter(orderAdapter);
+
+        Button viewReportsButton = findViewById(R.id.view_reports_button);
+        viewReportsButton.setOnClickListener(v -> startActivity(new Intent(MainActivity2.this, ReportsActivity.class)));
 
         loadOrders();
     }
 
     private void loadOrders() {
         db.collection("orders").get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            StringBuilder orders = new StringBuilder();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String branch = document.getString("branch");
-                                String brand = document.getString("brand");
-                                String quantity = document.getString("quantity");
-                                String customerId = document.getString("customerId");
-
-                                orders.append("Branch: ").append(branch)
-                                        .append("\nBrand: ").append(brand)
-                                        .append("\nQuantity: ").append(quantity)
-                                        .append("\nCustomer ID: ").append(customerId)
-                                        .append("\n\n");
-                            }
-                            ordersTextView.setText(orders.toString());
-                        } else {
-                            ordersTextView.setText("Error getting orders.");
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        orderList.clear();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            StructuredQuery.Order order = document.toObject(StructuredQuery.Order.class);
+                            orderList.add(order);
                         }
+                        orderAdapter.notifyDataSetChanged();
+                    } else {
+                        Toast.makeText(this, "Error loading orders", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_refresh) {
+            loadOrders();
+            return true;
+        } else if (item.getItemId() == R.id.action_inventory) {
+            startActivity(new Intent(this, InventoryActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

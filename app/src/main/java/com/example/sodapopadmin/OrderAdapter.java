@@ -49,6 +49,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         return orderList.size();
     }
 
+    public void updateOrders(List<Order> newOrders) {
+        this.orderList = newOrders;
+        notifyDataSetChanged();
+    }
+
     private void updateOrderStatus(Order order) {
         // Toggle between "Pending" and "Completed"
         String newStatus = order.status.equals("Pending") ? "Completed" : "Pending";

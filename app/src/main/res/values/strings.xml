@@ -4,9 +4,10 @@
 
         <string-array name="branches_array">
             <item>All</item>
-            <item>Branch A</item>
-            <item>Branch B</item>
-            <item>Branch C</item>
+            <item>Nairobi</item>
+            <item>Kisumu</item>
+            <item>Mombasa</item>
+            <item>HeadQuaters</item>
         </string-array>
 
         <string-array name="status_array">
@@ -15,5 +16,10 @@
             <item>Completed</item>
         </string-array>
 
+    <string-array name="drinks_array">
+        <item>Coke</item>
+        <item>Fanta</item>
+        <item>Sprite</item>
+    </string-array>
 
 </resources>

@@ -1,16 +1,17 @@
 package com.example.sodapopadmin;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.sodapopadmin.databinding.ActivityAdminDashboardBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -19,47 +20,39 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class AdminDashboardActivity extends AppCompatActivity {
 
-    private ActivityAdminDashboardBinding binding;
-    private DatabaseReference ordersRef;
+    private RecyclerView orderRecyclerView;
     private OrderAdapter orderAdapter;
     private List<Order> orderList;
+    private DatabaseReference ordersRef;
     private FirebaseAuth auth;
+    private Spinner branchSpinner, statusSpinner, drinkSpinner;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityAdminDashboardBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(R.layout.activity_admin_dashboard);
 
         auth = FirebaseAuth.getInstance();
         ordersRef = FirebaseDatabase.getInstance().getReference().child("orders");
         orderList = new ArrayList<>();
+
+        branchSpinner = findViewById(R.id.branchSpinner);
+        statusSpinner = findViewById(R.id.statusSpinner);
+        drinkSpinner = findViewById(R.id.drinkSpinner);
+        orderRecyclerView = findViewById(R.id.orderRecyclerView);
+
         orderAdapter = new OrderAdapter(orderList);
+        orderRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        orderRecyclerView.setAdapter(orderAdapter);
 
-        binding.orderRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        binding.orderRecyclerView.setAdapter(orderAdapter);
+        findViewById(R.id.applyFiltersButton).setOnClickListener(v -> applyFilters());
 
-        setupSpinners();
         loadOrders();
-
-        binding.applyFiltersButton.setOnClickListener(v -> applyFilters());
-    }
-
-    private void setupSpinners() {
-        ArrayAdapter<CharSequence> branchAdapter = ArrayAdapter.createFromResource(this,
-                R.array.branches_array, android.R.layout.simple_spinner_item);
-        branchAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.branchSpinner.setAdapter(branchAdapter);
-
-        ArrayAdapter<CharSequence> statusAdapter = ArrayAdapter.createFromResource(this,
-                R.array.status_array, android.R.layout.simple_spinner_item);
-        statusAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.statusSpinner.setAdapter(statusAdapter);
     }
 
     private void loadOrders() {
@@ -70,7 +63,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Order order = snapshot.getValue(Order.class);
                     if (order != null) {
-                        order.id = snapshot.getKey();
+                        order.setId(snapshot.getKey());
                         orderList.add(order);
                     }
                 }
@@ -85,22 +78,20 @@ public class AdminDashboardActivity extends AppCompatActivity {
     }
 
     private void applyFilters() {
-        String selectedBranch = binding.branchSpinner.getSelectedItem().toString();
-        String selectedStatus = binding.statusSpinner.getSelectedItem().toString();
+        String selectedBranch = branchSpinner.getSelectedItem().toString();
+        String selectedStatus = statusSpinner.getSelectedItem().toString();
+        String selectedDrink = drinkSpinner.getSelectedItem().toString();
 
         List<Order> filteredList = new ArrayList<>();
         for (Order order : orderList) {
-            if ((selectedBranch.equals("All") || order.branch.equals(selectedBranch)) &&
-                    (selectedStatus.equals("All") || order.status.equals(selectedStatus))) {
+            if ((selectedBranch.equals("All") || order.getBranch().equals(selectedBranch)) &&
+                    (selectedStatus.equals("All") || order.getStatus().equals(selectedStatus)) &&
+                    (selectedDrink.equals("All") || order.getDrink().equals(selectedDrink))) {
                 filteredList.add(order);
             }
         }
 
-        // Sort by name
-        Collections.sort(filteredList, (o1, o2) -> o1.name.compareTo(o2.name));
-
-        orderAdapter = new OrderAdapter(filteredList);
-        binding.orderRecyclerView.setAdapter(orderAdapter);
+        orderAdapter.updateOrders(filteredList);
     }
 
     @Override

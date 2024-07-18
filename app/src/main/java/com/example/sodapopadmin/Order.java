@@ -9,7 +9,7 @@ public class Order {
     public String status;
 
     public Order() {
-
+        // Default constructor required for calls to DataSnapshot.getValue(Order.class)
     }
 
     public Order(String id, String name, String drink, String branch, String amount, String status) {
@@ -21,5 +21,19 @@ public class Order {
         this.status = status;
     }
 
+    // Getters
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getDrink() { return drink; }
+    public String getBranch() { return branch; }
+    public String getAmount() { return amount; }
+    public String getStatus() { return status; }
 
+    // Setters
+    public void setId(String id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setDrink(String drink) { this.drink = drink; }
+    public void setBranch(String branch) { this.branch = branch; }
+    public void setAmount(String amount) { this.amount = amount; }
+    public void setStatus(String status) { this.status = status; }
 }

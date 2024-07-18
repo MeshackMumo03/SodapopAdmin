@@ -3,21 +3,25 @@ package com.example.sodapopadmin;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firestore.v1.StructuredQuery;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
 
-    private List<StructuredQuery.Order> orderList;
+    private List<Order> orderList;
+    private DatabaseReference ordersRef;
 
-    public OrderAdapter(List<StructuredQuery.Order> orderList) {
+    public OrderAdapter(List<Order> orderList) {
         this.orderList = orderList;
+        this.ordersRef = FirebaseDatabase.getInstance().getReference().child("orders");
     }
 
     @NonNull
@@ -29,8 +33,15 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
     @Override
     public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
-        StructuredQuery.Order order = orderList.get(position);
-        holder.bind(order);
+        Order order = orderList.get(position);
+        holder.nameTextView.setText("Name: " + order.name);
+        holder.drinkTextView.setText("Drink: " + order.drink);
+        holder.branchTextView.setText("Branch: " + order.branch);
+        holder.amountTextView.setText("Amount: " + order.amount);
+        holder.statusTextView.setText("Status: " + order.status);
+
+        holder.updateStatusButton.setOnClickListener(v -> updateOrderStatus(order));
+        holder.deleteButton.setOnClickListener(v -> deleteOrder(order));
     }
 
     @Override
@@ -38,22 +49,29 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         return orderList.size();
     }
 
+    private void updateOrderStatus(Order order) {
+        // Toggle between "Pending" and "Completed"
+        String newStatus = order.status.equals("Pending") ? "Completed" : "Pending";
+        ordersRef.child(order.id).child("status").setValue(newStatus);
+    }
+
+    private void deleteOrder(Order order) {
+        ordersRef.child(order.id).removeValue();
+    }
+
     static class OrderViewHolder extends RecyclerView.ViewHolder {
-        TextView branchTextView, brandTextView, quantityTextView, customerIdTextView;
+        TextView nameTextView, drinkTextView, branchTextView, amountTextView, statusTextView;
+        Button updateStatusButton, deleteButton;
 
         OrderViewHolder(@NonNull View itemView) {
             super(itemView);
-            branchTextView = itemView.findViewById(R.id.branch_text_view);
-            brandTextView = itemView.findViewById(R.id.brand_text_view);
-            quantityTextView = itemView.findViewById(R.id.quantity_text_view);
-            customerIdTextView = itemView.findViewById(R.id.customer_id_text_view);
-        }
-
-        void bind(StructuredQuery.Order order) {
-            branchTextView.setText("Branch: " + order.getBranch());
-            brandTextView.setText("Brand: " + order.getBrand());
-            quantityTextView.setText("Quantity: " + order.getQuantity());
-            customerIdTextView.setText("Customer ID: " + order.getCustomerId());
+            nameTextView = itemView.findViewById(R.id.nameTextView);
+            drinkTextView = itemView.findViewById(R.id.drinkTextView);
+            branchTextView = itemView.findViewById(R.id.branchTextView);
+            amountTextView = itemView.findViewById(R.id.amountTextView);
+            statusTextView = itemView.findViewById(R.id.statusTextView);
+            updateStatusButton = itemView.findViewById(R.id.updateStatusButton);
+            deleteButton = itemView.findViewById(R.id.deleteButton);
         }
     }
 }

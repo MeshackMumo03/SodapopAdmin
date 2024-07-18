@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">SodapopAdmin</string>
+
+
+        <string-array name="branches_array">
+            <item>All</item>
+            <item>Branch A</item>
+            <item>Branch B</item>
+            <item>Branch C</item>
+        </string-array>
+
+        <string-array name="status_array">
+            <item>All</item>
+            <item>Pending</item>
+            <item>Completed</item>
+        </string-array>
+
+
 </resources>

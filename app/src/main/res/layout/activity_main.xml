@@ -9,23 +9,20 @@
         android:id="@+id/email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Admin Email"
-        android:inputType="textEmailAddress"
-        android:padding="12dp" />
+        android:hint="Email"
+        android:inputType="textEmailAddress" />
 
     <EditText
         android:id="@+id/password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Admin Password"
-        android:inputType="textPassword"
-        android:padding="12dp"
-        android:layout_marginTop="8dp"/>
+        android:hint="Password"
+        android:inputType="textPassword" />
 
     <Button
         android:id="@+id/btn_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Login"
-        android:layout_marginTop="16dp"/>
+        android:text="Login" />
+
 </LinearLayout>

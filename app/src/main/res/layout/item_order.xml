@@ -6,26 +6,47 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/branch_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Branch" />
+        android:id="@+id/nameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/brand_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Brand" />
+        android:id="@+id/drinkTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/quantity_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Quantity" />
+        android:id="@+id/branchTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/customer_id_text_view"
+        android:id="@+id/amountTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/statusTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Customer ID" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/updateStatusButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Update Status" />
+
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete" />
+
+    </LinearLayout>
+
 </LinearLayout>

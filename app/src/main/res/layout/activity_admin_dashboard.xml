@@ -8,51 +8,83 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
+        android:text="Admin Dashboard"
         android:textSize="24sp"
+        android:textStyle="bold"
         android:layout_marginBottom="16dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/branchLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Branch:"
+            android:layout_marginEnd="8dp"/>
 
         <Spinner
             android:id="@+id/branchSpinner"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:entries="@array/branches_array" />
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/statusLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status:"
+            android:layout_marginEnd="8dp"/>
 
         <Spinner
             android:id="@+id/statusSpinner"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:entries="@array/status_array" />
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/drinkLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Drink:"
+            android:layout_marginEnd="8dp"/>
 
         <Spinner
             android:id="@+id/drinkSpinner"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:entries="@array/drinks_array" />
-
+            android:layout_weight="1"/>
     </LinearLayout>
-
-    <Button
-        android:id="@+id/applyFiltersButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Apply Filters"
-        android:layout_gravity="end"
-        android:layout_marginTop="8dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/orderRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="16dp" />
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnManageStock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Manage Stock"/>
 
 </LinearLayout>
+

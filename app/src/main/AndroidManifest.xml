@@ -13,6 +13,12 @@
         android:theme="@style/Theme.SodapopAdmin"
         tools:targetApi="31">
         <activity
+            android:name=".StockAdapter"
+            android:exported="false" />
+        <activity
+            android:name=".StockManagementActivity"
+            android:exported="false" />
+        <activity
             android:name=".OrderAdapter"
             android:exported="false" />
         <activity

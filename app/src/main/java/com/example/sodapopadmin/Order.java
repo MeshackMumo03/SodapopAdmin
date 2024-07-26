@@ -21,7 +21,8 @@ public class Order {
         this.status = status;
     }
 
-    // Getters
+
+
     public String getId() { return id; }
     public String getName() { return name; }
     public String getDrink() { return drink; }
@@ -29,7 +30,7 @@ public class Order {
     public String getAmount() { return amount; }
     public String getStatus() { return status; }
 
-    // Setters
+
     public void setId(String id) { this.id = id; }
     public void setName(String name) { this.name = name; }
     public void setDrink(String drink) { this.drink = drink; }

@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                // Admin credentials check
+
                 if (email.equals("admin@example.com") && password.equals("admin123")) {
                     startActivity(new Intent(MainActivity.this, AdminDashboardActivity.class));
                     finish();

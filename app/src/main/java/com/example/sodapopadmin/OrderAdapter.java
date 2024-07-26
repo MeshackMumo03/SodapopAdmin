@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,14 +35,14 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     @Override
     public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
         Order order = orderList.get(position);
-        holder.nameTextView.setText("Name: " + order.name);
-        holder.drinkTextView.setText("Drink: " + order.drink);
-        holder.branchTextView.setText("Branch: " + order.branch);
-        holder.amountTextView.setText("Amount: " + order.amount);
-        holder.statusTextView.setText("Status: " + order.status);
+        holder.nameTextView.setText("Name: " + (order.getName() != null ? order.getName() : "N/A"));
+        holder.drinkTextView.setText("Drink: " + (order.getDrink() != null ? order.getDrink() : "N/A"));
+        holder.branchTextView.setText("Branch: " + (order.getBranch() != null ? order.getBranch() : "N/A"));
+        holder.amountTextView.setText("Amount: " + (order.getAmount() != null ? order.getAmount() : "N/A"));
+        holder.statusTextView.setText("Status: " + (order.getStatus() != null ? order.getStatus() : "N/A"));
 
-        holder.updateStatusButton.setOnClickListener(v -> updateOrderStatus(order));
-        holder.deleteButton.setOnClickListener(v -> deleteOrder(order));
+        holder.updateStatusButton.setOnClickListener(v -> updateOrderStatus(order, holder.itemView));
+        holder.deleteButton.setOnClickListener(v -> deleteOrder(order, holder.itemView));
     }
 
     @Override
@@ -54,14 +55,41 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         notifyDataSetChanged();
     }
 
-    private void updateOrderStatus(Order order) {
-        // Toggle between "Pending" and "Completed"
-        String newStatus = order.status.equals("Pending") ? "Completed" : "Pending";
-        ordersRef.child(order.id).child("status").setValue(newStatus);
+    private void updateOrderStatus(Order order, View itemView) {
+        if (order == null || order.getId() == null) {
+            Toast.makeText(itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String currentStatus = order.getStatus();
+        if (currentStatus == null) {
+            currentStatus = "Pending"; // Default to "Pending" if status is null
+        }
+
+        String newStatus = currentStatus.equals("Pending") ? "Completed" : "Pending";
+
+        ordersRef.child(order.getId()).child("status").setValue(newStatus)
+                .addOnSuccessListener(aVoid -> {
+                    order.setStatus(newStatus); // Update the local object
+                    notifyDataSetChanged(); // Refresh the RecyclerView
+                    Toast.makeText(itemView.getContext(), "Status updated successfully", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> Toast.makeText(itemView.getContext(), "Failed to update status: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    private void deleteOrder(Order order) {
-        ordersRef.child(order.id).removeValue();
+    private void deleteOrder(Order order, View itemView) {
+        if (order == null || order.getId() == null) {
+            Toast.makeText(itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ordersRef.child(order.getId()).removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    orderList.remove(order);
+                    notifyDataSetChanged();
+                    Toast.makeText(itemView.getContext(), "Order deleted successfully", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> Toast.makeText(itemView.getContext(), "Failed to delete order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     static class OrderViewHolder extends RecyclerView.ViewHolder {

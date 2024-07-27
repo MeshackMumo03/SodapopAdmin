@@ -10,11 +10,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
@@ -22,12 +19,10 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
     private List<Order> orderList;
     private DatabaseReference ordersRef;
-    private DatabaseReference stockRef;
 
     public OrderAdapter(List<Order> orderList) {
         this.orderList = orderList;
         this.ordersRef = FirebaseDatabase.getInstance().getReference().child("orders");
-        this.stockRef = FirebaseDatabase.getInstance().getReference().child("stock");
     }
 
     @NonNull
@@ -61,80 +56,34 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     }
 
     private void updateOrderStatus(Order order, View itemView) {
-        if (order == null) {
+        if (order == null || order.getId() == null) {
             Toast.makeText(itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String orderId = order.getId();
-        if (orderId == null || orderId.isEmpty()) {
-            Toast.makeText(itemView.getContext(), "Order ID is missing", Toast.LENGTH_SHORT).show();
             return;
         }
 
         String currentStatus = order.getStatus();
         if (currentStatus == null) {
-            currentStatus = "Pending";
+            currentStatus = "Pending"; // Default to "Pending" if status is null
         }
 
         String newStatus = currentStatus.equals("Pending") ? "Completed" : "Pending";
 
-        ordersRef.child(orderId).child("status").setValue(newStatus)
+        ordersRef.child(order.getId()).child("status").setValue(newStatus)
                 .addOnSuccessListener(aVoid -> {
-                    order.setStatus(newStatus);
-                    notifyDataSetChanged();
+                    order.setStatus(newStatus); // Update the local object
+                    notifyDataSetChanged(); // Refresh the RecyclerView
                     Toast.makeText(itemView.getContext(), "Status updated successfully", Toast.LENGTH_SHORT).show();
-
-                    if (newStatus.equals("Completed")) {
-                        reduceStock(order);
-                    }
                 })
                 .addOnFailureListener(e -> Toast.makeText(itemView.getContext(), "Failed to update status: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    private void reduceStock(Order order) {
-        stockRef.child(order.getDrink()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Stock stock = dataSnapshot.getValue(Stock.class);
-                if (stock != null) {
-                    int orderAmount = Integer.parseInt(order.getAmount());
-                    String branch = order.getBranch();
-
-
-                    int branchStock = stock.getBranchStock().getOrDefault(branch, 0);
-                    if (branchStock >= orderAmount) {
-                        stock.getBranchStock().put(branch, branchStock - orderAmount);
-
-
-                        stock.setTotalStock(stock.getTotalStock() - orderAmount);
-
-
-                        stockRef.child(order.getDrink()).setValue(stock);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
-
     private void deleteOrder(Order order, View itemView) {
-        if (order == null) {
+        if (order == null || order.getId() == null) {
             Toast.makeText(itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String orderId = order.getId();
-        if (orderId == null || orderId.isEmpty()) {
-            Toast.makeText(itemView.getContext(), "Order ID is missing", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        ordersRef.child(orderId).removeValue()
+        ordersRef.child(order.getId()).removeValue()
                 .addOnSuccessListener(aVoid -> {
                     orderList.remove(order);
                     notifyDataSetChanged();

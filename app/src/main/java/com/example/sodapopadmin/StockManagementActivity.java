@@ -166,7 +166,7 @@ public class StockManagementActivity extends AppCompatActivity {
                 stockAdapter.notifyDataSetChanged();
                 checkLowStock();
             }
-
+//
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Toast.makeText(StockManagementActivity.this, "Failed to load stock data", Toast.LENGTH_SHORT).show();

@@ -98,9 +98,11 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Order order = snapshot.getValue(Order.class);
                     if (order != null) {
+                        order.setId(snapshot.getKey());
                         orderList.add(order);
                     }
                 }
+                orderAdapter.notifyDataSetChanged();
                 applyFilters();
             }
 
@@ -132,4 +134,5 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
         orderAdapter.updateOrders(filteredOrders);
     }
+
 }

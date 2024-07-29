@@ -9,10 +9,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,12 +23,13 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class StockManagementActivity extends AppCompatActivity {
 
     private EditText etItemName, etTotalStock, etDistributeAmount, etThreshold;
-    private Spinner spinnerBranch;
-    private Button btnAddStock, btnDistribute, btnUpdateThreshold;
+    private Spinner spinnerBranch, spinnerDistributeItem;
+    private Button btnAddStock, btnDistribute, btnUpdateThreshold, btnDeleteStock;
     private RecyclerView rvStockList;
     private TextView tvWarning;
 
@@ -45,7 +44,7 @@ public class StockManagementActivity extends AppCompatActivity {
 
         initializeViews();
         setupRecyclerView();
-        setupSpinner();
+        setupSpinners();
         setupButtons();
         loadStockData();
     }
@@ -56,9 +55,11 @@ public class StockManagementActivity extends AppCompatActivity {
         etDistributeAmount = findViewById(R.id.etDistributeAmount);
         etThreshold = findViewById(R.id.etThreshold);
         spinnerBranch = findViewById(R.id.spinnerBranch);
+        spinnerDistributeItem = findViewById(R.id.spinnerDistributeItem);
         btnAddStock = findViewById(R.id.btnAddStock);
         btnDistribute = findViewById(R.id.btnDistribute);
         btnUpdateThreshold = findViewById(R.id.btnUpdateThreshold);
+        btnDeleteStock = findViewById(R.id.btnDeleteStock);
         rvStockList = findViewById(R.id.rvStockList);
         tvWarning = findViewById(R.id.tvWarning);
     }
@@ -71,17 +72,23 @@ public class StockManagementActivity extends AppCompatActivity {
         rvStockList.setAdapter(stockAdapter);
     }
 
-    private void setupSpinner() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+    private void setupSpinners() {
+        ArrayAdapter<CharSequence> branchAdapter = ArrayAdapter.createFromResource(this,
                 R.array.branches_array, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerBranch.setAdapter(adapter);
+        branchAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerBranch.setAdapter(branchAdapter);
+
+        ArrayAdapter<String> itemAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, new ArrayList<>());
+        itemAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerDistributeItem.setAdapter(itemAdapter);
     }
 
     private void setupButtons() {
         btnAddStock.setOnClickListener(v -> addNewStock());
         btnDistribute.setOnClickListener(v -> distributeStock());
         btnUpdateThreshold.setOnClickListener(v -> updateThreshold());
+        btnDeleteStock.setOnClickListener(v -> deleteSelectedStock());
     }
 
     private void addNewStock() {
@@ -94,32 +101,40 @@ public class StockManagementActivity extends AppCompatActivity {
         }
 
         int totalStock = Integer.parseInt(totalStockStr);
-        String id = stockRef.push().getKey();
-        Stock newStock = new Stock(id, itemName, totalStock);
+        for (Stock existingStock : stockList) {
+            if (existingStock.getItemName().equalsIgnoreCase(itemName)) {
+                Toast.makeText(this, "Item already exists", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        Stock newStock = new Stock(null, itemName, totalStock);
 
-        stockRef.child(id).setValue(newStock)
+        stockRef.child(itemName).setValue(newStock)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(StockManagementActivity.this, "Stock added successfully", Toast.LENGTH_SHORT).show();
                     etItemName.setText("");
                     etTotalStock.setText("");
+                    loadStockData();
                 })
                 .addOnFailureListener(e -> Toast.makeText(StockManagementActivity.this, "Failed to add stock", Toast.LENGTH_SHORT).show());
+
     }
 
     private void distributeStock() {
         String selectedBranch = spinnerBranch.getSelectedItem().toString();
+        String selectedItem = spinnerDistributeItem.getSelectedItem().toString();
         String amountStr = etDistributeAmount.getText().toString().trim();
 
-        if (selectedBranch.isEmpty() || amountStr.isEmpty()) {
+        if (selectedBranch.isEmpty() || selectedItem.isEmpty() || amountStr.isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
         int amount = Integer.parseInt(amountStr);
-        Stock selectedStock = stockAdapter.getSelectedStock();
+        Stock selectedStock = findStockByName(selectedItem);
 
         if (selectedStock == null) {
-            Toast.makeText(this, "Please select a stock item", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Selected item not found", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -129,13 +144,22 @@ public class StockManagementActivity extends AppCompatActivity {
         }
 
         selectedStock.distributeStock(selectedBranch, amount);
-        stockRef.child(selectedStock.getId()).setValue(selectedStock)
+        stockRef.child(selectedStock.getItemName()).setValue(selectedStock)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(StockManagementActivity.this, "Stock distributed successfully", Toast.LENGTH_SHORT).show();
                     etDistributeAmount.setText("");
-                    checkLowStock();
+                    loadStockData();
                 })
                 .addOnFailureListener(e -> Toast.makeText(StockManagementActivity.this, "Failed to distribute stock", Toast.LENGTH_SHORT).show());
+    }
+
+    private Stock findStockByName(String itemName) {
+        for (Stock stock : stockList) {
+            if (stock.getItemName().equals(itemName)) {
+                return stock;
+            }
+        }
+        return null;
     }
 
     private void updateThreshold() {
@@ -148,22 +172,52 @@ public class StockManagementActivity extends AppCompatActivity {
         int newThreshold = Integer.parseInt(thresholdStr);
         Stock.setLowStockThreshold(newThreshold);
 
+        // Update all stocks in Firebase
+        for (Stock stock : stockList) {
+            stockRef.child(stock.getItemName()).setValue(stock);
+        }
+
         Toast.makeText(this, "Stock threshold updated successfully", Toast.LENGTH_SHORT).show();
-        checkLowStock();
+        loadStockData();
+    }
+
+    private void deleteSelectedStock() {
+        Stock selectedStock = stockAdapter.getSelectedStock();
+        if (selectedStock == null) {
+            Toast.makeText(this, "Please select a stock item to delete", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Stock")
+                .setMessage("Are you sure you want to delete " + selectedStock.getItemName() + "?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    stockRef.child(selectedStock.getItemName()).removeValue()
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(StockManagementActivity.this, "Stock deleted successfully", Toast.LENGTH_SHORT).show();
+                                loadStockData();
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(StockManagementActivity.this, "Failed to delete stock", Toast.LENGTH_SHORT).show());
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 
     private void loadStockData() {
-        stockRef.addValueEventListener(new ValueEventListener() {
+        stockRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 stockList.clear();
+                List<String> itemNames = new ArrayList<>();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Stock stock = snapshot.getValue(Stock.class);
                     if (stock != null) {
                         stockList.add(stock);
+                        itemNames.add(stock.getItemName());
                     }
                 }
                 stockAdapter.notifyDataSetChanged();
+                updateDistributeItemSpinner(itemNames);
                 checkLowStock();
             }
 
@@ -173,6 +227,15 @@ public class StockManagementActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void updateDistributeItemSpinner(List<String> itemNames) {
+        ArrayAdapter<String> adapter = (ArrayAdapter<String>) spinnerDistributeItem.getAdapter();
+        adapter.clear();
+        adapter.addAll(itemNames);
+        adapter.notifyDataSetChanged();
+    }
+
+
 
     private void checkLowStock() {
         StringBuilder warningMessage = new StringBuilder();

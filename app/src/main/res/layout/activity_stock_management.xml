@@ -12,6 +12,8 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -52,6 +54,11 @@
             android:text="Distribute Stock"
             android:textSize="18sp"
             android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerDistributeItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <Spinner
             android:id="@+id/spinnerBranch"
@@ -117,6 +124,12 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btnDeleteStock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete Stock" />
 
         <TextView
             android:id="@+id/tvWarning"

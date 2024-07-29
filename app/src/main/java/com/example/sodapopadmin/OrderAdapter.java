@@ -46,8 +46,8 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         holder.amountTextView.setText("Amount: " + (order.getAmount() != null ? order.getAmount() : "N/A"));
         holder.statusTextView.setText("Status: " + (order.getStatus() != null ? order.getStatus() : "N/A"));
 
-        holder.updateStatusButton.setOnClickListener(v -> updateOrderStatus(order, holder.itemView));
-        holder.deleteButton.setOnClickListener(v -> deleteOrder(order, holder.itemView));
+        holder.updateStatusButton.setOnClickListener(v -> updateOrderStatus(order, holder));
+        holder.deleteButton.setOnClickListener(v -> deleteOrder(order, holder));
     }
 
     @Override
@@ -60,15 +60,9 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         notifyDataSetChanged();
     }
 
-    private void updateOrderStatus(Order order, View itemView) {
-        if (order == null) {
-            Toast.makeText(itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String orderId = order.getId();
-        if (orderId == null || orderId.isEmpty()) {
-            Toast.makeText(itemView.getContext(), "Order ID is missing", Toast.LENGTH_SHORT).show();
+    private void updateOrderStatus(Order order, OrderViewHolder holder) {
+        if (order == null || order.getId() == null) {
+            Toast.makeText(holder.itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -79,17 +73,17 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
         String newStatus = currentStatus.equals("Pending") ? "Completed" : "Pending";
 
-        ordersRef.child(orderId).child("status").setValue(newStatus)
+        ordersRef.child(order.getId()).child("status").setValue(newStatus)
                 .addOnSuccessListener(aVoid -> {
                     order.setStatus(newStatus);
-                    notifyDataSetChanged();
-                    Toast.makeText(itemView.getContext(), "Status updated successfully", Toast.LENGTH_SHORT).show();
+                    notifyItemChanged(holder.getAdapterPosition());
+                    Toast.makeText(holder.itemView.getContext(), "Status updated successfully", Toast.LENGTH_SHORT).show();
 
                     if (newStatus.equals("Completed")) {
                         reduceStock(order);
                     }
                 })
-                .addOnFailureListener(e -> Toast.makeText(itemView.getContext(), "Failed to update status: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> Toast.makeText(holder.itemView.getContext(), "Failed to update status: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private void reduceStock(Order order) {
@@ -101,15 +95,10 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
                     int orderAmount = Integer.parseInt(order.getAmount());
                     String branch = order.getBranch();
 
-
                     int branchStock = stock.getBranchStock().getOrDefault(branch, 0);
                     if (branchStock >= orderAmount) {
                         stock.getBranchStock().put(branch, branchStock - orderAmount);
-
-
                         stock.setTotalStock(stock.getTotalStock() - orderAmount);
-
-
                         stockRef.child(order.getDrink()).setValue(stock);
                     }
                 }
@@ -117,30 +106,25 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                // Handle error
             }
         });
     }
 
-    private void deleteOrder(Order order, View itemView) {
-        if (order == null) {
-            Toast.makeText(itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
+    private void deleteOrder(Order order, OrderViewHolder holder) {
+        if (order == null || order.getId() == null) {
+            Toast.makeText(holder.itemView.getContext(), "Invalid order data", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String orderId = order.getId();
-        if (orderId == null || orderId.isEmpty()) {
-            Toast.makeText(itemView.getContext(), "Order ID is missing", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        ordersRef.child(orderId).removeValue()
+        ordersRef.child(order.getId()).removeValue()
                 .addOnSuccessListener(aVoid -> {
-                    orderList.remove(order);
-                    notifyDataSetChanged();
-                    Toast.makeText(itemView.getContext(), "Order deleted successfully", Toast.LENGTH_SHORT).show();
+                    int position = holder.getAdapterPosition();
+                    orderList.remove(position);
+                    notifyItemRemoved(position);
+                    Toast.makeText(holder.itemView.getContext(), "Order deleted successfully", Toast.LENGTH_SHORT).show();
                 })
-                .addOnFailureListener(e -> Toast.makeText(itemView.getContext(), "Failed to delete order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> Toast.makeText(holder.itemView.getContext(), "Failed to delete order: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     static class OrderViewHolder extends RecyclerView.ViewHolder {

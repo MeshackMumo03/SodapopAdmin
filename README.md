@@ -1,6 +1,6 @@
 # SodapopAdmin
 Project Overview
-This project involves developing a distributed Android application to automate the operations of a business enterprise that sells drinks from various brands. The application allows customers to place orders at any branch, including the headquarters, and ensures that these orders are processed efficiently.
+This project involves developing a distributed Android application to automate the operations of a business enterprise that sells drinks from various brands. The application allows administraters to moniter any branch, including the headquarters, and ensures that these orders are sent efficiently.
 
 Key Features
 Customer Order Management:
